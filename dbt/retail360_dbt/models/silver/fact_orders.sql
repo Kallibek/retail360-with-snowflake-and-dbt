@@ -1,7 +1,8 @@
 {{ config(
     materialized='incremental',
     unique_key='order_id',
-    on_schema_change='append_new_columns'
+    on_schema_change='append_new_columns',
+    cluster_by=['created_at', 'order_id']
 ) }}
 
 WITH latest_staging AS (

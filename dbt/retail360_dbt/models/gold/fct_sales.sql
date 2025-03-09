@@ -1,7 +1,8 @@
 {{ config(
     materialized='table',
     schema='MARTS',
-    on_schema_change='append_new_columns'
+    on_schema_change='append_new_columns',
+    cluster_by=['order_created_at']
 ) }}
 
 WITH order_items AS (
