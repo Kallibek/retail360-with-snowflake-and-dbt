@@ -1,0 +1,23 @@
+name: 'retail360_dbt'
+version: '1.0.0'
+config-version: 2
+
+# Where dbt will look for models
+source-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+
+profile: 'retail360_profile'  # references a profile in profiles.yml
+
+models:
+  retail360_dbt:
+    staging:
+      +schema: "STAGING"
+      +materialized: table
+    silver:
+      +schema: "CORE"
+      +materialized: table
+    gold:
+      +schema: "MARTS"
+      +materialized: table
