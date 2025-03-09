@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.bash_operator import BashOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from datetime import datetime, timedelta
 from airflow.utils.dates import days_ago
@@ -89,17 +88,5 @@ with DAG(
     #     op_kwargs={'query': "SELECT 1 + 1"}
     # )
 
-    DBT_PROJECT_DIR = '/opt/dbt/retail360_dbt'  # adapt to your actual path
-
-    task_dbt_run = BashOperator(
-        task_id='dbt_run',
-        bash_command=f"cd {DBT_PROJECT_DIR} && dbt run --profiles-dir ."
-    )
-
-    # 5. dbt tests
-    task_dbt_test = BashOperator(
-        task_id='dbt_test',
-        bash_command=f"cd {DBT_PROJECT_DIR} && dbt test --profiles-dir ."
-    )
-
-    generate_upload_task >> task_dbt_run >> task_dbt_test
+    
+    generate_upload_task
