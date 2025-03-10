@@ -1,0 +1,7 @@
+sources:
+  - name: staging
+    database: "{{ env_var('SNOWFLAKE_DATABASE') | upper }}"
+    schema: STAGING
+    tables:
+      - name: orders
+      - name: orderitems

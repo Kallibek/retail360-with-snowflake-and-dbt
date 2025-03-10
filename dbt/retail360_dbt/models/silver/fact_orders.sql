@@ -23,7 +23,7 @@ WITH latest_staging AS (
             PARTITION BY order_id
             ORDER BY created_at DESC
         ) AS row_num
-    FROM {{ ref('stg_orders') }}
+    FROM {{ source('staging', 'orders') }}
     WHERE order_id IS NOT NULL
 )
 

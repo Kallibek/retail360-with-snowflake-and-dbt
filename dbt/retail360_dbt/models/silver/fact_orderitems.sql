@@ -21,7 +21,7 @@ WITH latest_staging AS (
             PARTITION BY order_id, product_id
             ORDER BY created_at DESC
         ) AS row_num
-    FROM {{ ref('stg_orderitems') }}
+    FROM {{ source('staging', 'orderitems') }}
     WHERE order_id IS NOT NULL
       AND product_id IS NOT NULL
 )

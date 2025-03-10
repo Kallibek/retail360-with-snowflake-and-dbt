@@ -38,6 +38,7 @@ resource "snowflake_stage" "landing_stage" {
   url         = "s3://${aws_s3_bucket.data_landing_zone.bucket}/"
   comment     = "Stage to load data from S3"
   credentials = "AWS_KEY_ID='${var.aws_access_key_id}' AWS_SECRET_KEY='${var.aws_secret_access_key}'"
+  #storage_integration = snowflake_storage_integration.s3_int.name
 }
 
 resource "snowflake_file_format" "csv" {
@@ -47,5 +48,4 @@ resource "snowflake_file_format" "csv" {
   format_type = "CSV"
   skip_header = 1
   field_optionally_enclosed_by = "\""
-  #parse_header = true
 }
