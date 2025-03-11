@@ -17,7 +17,7 @@ default_args = {
 with DAG(
     dag_id='dbt',
     default_args=default_args,
-    schedule_interval='@once',
+    schedule_interval='0 */4 * * *',
     catchup=False,
 ) as dag:
 

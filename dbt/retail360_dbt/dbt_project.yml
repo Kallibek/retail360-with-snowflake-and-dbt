@@ -13,11 +13,11 @@ profile: 'retail360_profile'  # references a profile in profiles.yml
 models:
   retail360_dbt:
     staging:
-      +schema: "STAGING"
+      +schema: "{{ env_var('STAGING_SCHEMA') }}"
       +materialized: table
     silver:
-      +schema: "CORE"
+      +schema: "{{ env_var('SILVER_SCHEMA') }}"
       +materialized: table
     gold:
-      +schema: "MARTS"
+      +schema: "{{ env_var('GOLD_SCHEMA') }}"
       +materialized: table

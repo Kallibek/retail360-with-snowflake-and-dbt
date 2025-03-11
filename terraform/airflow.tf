@@ -16,7 +16,11 @@ resource "null_resource" "deploy_airflow" {
       SNOWFLAKE_DATABASE = snowflake_database.this.name
       SNOWFLAKE_WH = snowflake_warehouse.this.name
       SNOWFLAKE_ROLE = var.snowflake_role
+      STAGING_SCHEMA = snowflake_schema.staging.name
+      SILVER_SCHEMA = snowflake_schema.core.name
+      GOLD_SCHEMA = snowflake_schema.marts.name
+      CSV_FILE_FORMAT_NAME = snowflake_file_format.csv.name
     }
-    command = "docker compose -f ../airflow/docker-compose.yml up -d"
+    command = "docker-compose -f ../airflow/docker-compose.yml build && docker-compose -f ../airflow/docker-compose.yml up -d"
   }
 }

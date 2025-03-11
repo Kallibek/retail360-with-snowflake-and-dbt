@@ -40,7 +40,10 @@ def drop_all_snowflake_tables(**kwargs):
     Drops all tables in the STAGING, CORE, and MARTS schemas of the configured Snowflake database,
     without dropping the schemas themselves.
     """
-    schemas = ["STAGING", "CORE", "MARTS"]
+    staging = os.environ.get('STAGING_SCHEMA')
+    core = os.environ.get('SILVER_SCHEMA')
+    marts = os.environ.get('GOLD_SCHEMA')
+    schemas = [staging, core, marts]
     for schema in schemas:
         logging.info(f"Dropping all tables in schema: {schema}")
         # 1) List all tables in the schema

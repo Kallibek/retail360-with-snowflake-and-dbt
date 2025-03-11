@@ -3,6 +3,7 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from datetime import datetime, timedelta
 from airflow.utils.dates import days_ago
+from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 import logging
 import os
 import random
@@ -28,7 +29,6 @@ def generate_and_upload_orders_data(**context):
     from utils.generate_data import generate_orders_and_orderitems
 
     s3_hook = S3Hook()
-    bucket_name = os.environ.get('AWS_LANDING_BUCKET_NAME')
     if not bucket_name:
         raise ValueError("AWS_LANDING_BUCKET_NAME environment variable is not set.")
 
@@ -69,9 +69,39 @@ with DAG(
     catchup=False,
 ) as dag:
     
+    bucket_name = os.environ.get('AWS_LANDING_BUCKET_NAME')
+    
+    # Sensors waiting for the static CSV files to exist in S3
+    wait_for_customers = S3KeySensor(
+        task_id='wait_for_customers_data',
+        bucket_name=bucket_name,
+        bucket_key='customers/latest.csv',
+        poke_interval=60,  # checks every 60 seconds
+        timeout=300,       # times out after 5 minutes if the file is not found
+        mode='poke'
+    )
+
+    wait_for_products = S3KeySensor(
+        task_id='wait_for_products_data',
+        bucket_name=bucket_name,
+        bucket_key='products/latest.csv',
+        poke_interval=60,
+        timeout=300,
+        mode='poke'
+    )
+
+    wait_for_stores = S3KeySensor(
+        task_id='wait_for_stores_data',
+        bucket_name=bucket_name,
+        bucket_key='stores/latest.csv',
+        poke_interval=60,
+        timeout=300,
+        mode='poke'
+    )
+    
     orders_data_task = PythonOperator(
         task_id='generate_and_upload_orders_data',
         python_callable=generate_and_upload_orders_data,
     )
 
-    orders_data_task
+    [wait_for_customers, wait_for_products, wait_for_stores] >> orders_data_task

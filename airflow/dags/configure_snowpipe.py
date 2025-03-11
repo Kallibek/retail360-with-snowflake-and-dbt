@@ -21,20 +21,20 @@ default_args = {
 
 # --- Constants ---
 # AWS/IAM and Snowflake Integration
-ROLE_NAME = "SnowflakeS3Role_test"         # IAM role name
-POLICY_NAME = "SnowflakeS3Policy_test"       # IAM policy name
-INTEGRATION_NAME = "S3_INT_TEST"             # Snowflake storage integration name
+ROLE_NAME = "SnowflakeS3Role"         # IAM role name
+POLICY_NAME = "SnowflakeS3Policy"       # IAM policy name
+INTEGRATION_NAME = "S3_INT"             # Snowflake storage integration name
 
 # Snowflake Schema and Stage Configuration
-SCHEMA_NAME = "STAGING"
-STAGE_NAME = "LANDING_STAGE_TEST"
+SCHEMA_NAME = os.environ.get('STAGING_SCHEMA')
+STAGE_NAME = "LANDING_STAGE_P"
 STAGE_FULL_NAME = f"{SCHEMA_NAME}.{STAGE_NAME}"
-FILE_FORMAT_NAME = "MY_CSV"
+FILE_FORMAT_NAME = os.environ.get('CSV_FILE_FORMAT_NAME')
 FILE_FORMAT_FULL_NAME = f"{SCHEMA_NAME}.{FILE_FORMAT_NAME}"
 
 # Snowpipe and Pipe Configuration
-PIPE_ORDERS_NAME = "ORDERS_PIPE_TEST"
-PIPE_ORDERITEMS_NAME = "ORDERITEMS_PIPE_TEST"
+PIPE_ORDERS_NAME = "ORDERS_PIPE"
+PIPE_ORDERITEMS_NAME = "ORDERITEMS_PIPE"
 TABLE_ORDERS = "orders"
 TABLE_ORDERITEMS = "orderitems"
 PREFIX_ORDERS = "orders/"
@@ -267,19 +267,49 @@ def create_snowpipe_for_orders_and_orderitems(**kwargs):
     queries = [
         f"""
         CREATE OR REPLACE PIPE {SCHEMA_NAME}.{PIPE_ORDERS_NAME}
-          AUTO_INGEST = TRUE
+            AUTO_INGEST = TRUE
         AS
-          COPY INTO {SCHEMA_NAME}.{TABLE_ORDERS}
-          FROM @{STAGE_FULL_NAME}/{PREFIX_ORDERS}
-          FILE_FORMAT = (FORMAT_NAME = {FILE_FORMAT_FULL_NAME});
+        COPY INTO {SCHEMA_NAME}.{TABLE_ORDERS} (
+            order_id,
+            customer_id,
+            store_id,
+            order_status,
+            total_amount,
+            discount_amount,
+            shipping_cost,
+            payment_type,
+            created_at,
+            ingestion_ts
+        )
+        FROM (
+            SELECT 
+                t.$1, t.$2, t.$3, t.$4, t.$5, t.$6, t.$7, t.$8, t.$9,
+                CURRENT_TIMESTAMP() AS ingestion_ts
+            FROM @{STAGE_FULL_NAME}/{PREFIX_ORDERS} t
+        )
+        FILE_FORMAT = (FORMAT_NAME = {FILE_FORMAT_FULL_NAME});
         """,
         f"""
         CREATE OR REPLACE PIPE {SCHEMA_NAME}.{PIPE_ORDERITEMS_NAME}
-          AUTO_INGEST = TRUE
+        AUTO_INGEST = TRUE
         AS
-          COPY INTO {SCHEMA_NAME}.{TABLE_ORDERITEMS}
-          FROM @{STAGE_FULL_NAME}/{PREFIX_ORDERITEMS}
-          FILE_FORMAT = (FORMAT_NAME = {FILE_FORMAT_FULL_NAME});
+        COPY INTO {SCHEMA_NAME}.{TABLE_ORDERITEMS} (
+            order_id,
+            product_id,
+            quantity,
+            unit_price,
+            line_total,
+            line_discount,
+            created_at,
+            ingestion_ts
+        )
+        FROM (
+            SELECT 
+                t.$1, t.$2, t.$3, t.$4, t.$5, t.$6, t.$7,
+                CURRENT_TIMESTAMP() AS ingestion_ts
+            FROM @{STAGE_FULL_NAME}/{PREFIX_ORDERITEMS} t
+        )
+        FILE_FORMAT = (FORMAT_NAME = {FILE_FORMAT_FULL_NAME});
         """
     ]
     run_snowflake_query(queries)
