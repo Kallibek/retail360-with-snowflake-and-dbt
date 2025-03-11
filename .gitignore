@@ -3,6 +3,7 @@ terraform/.terraform
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 *.txt
+!requirements.txt
 *.ps1
 terraform/variables.tf
 dbt/retail360_dbt/logs
@@ -11,3 +12,4 @@ dbt/retail360_dbt/target
 airflow/logs
 terraform/terraform.tfstate.*.backup
 dbt/retail360_dbt/dbt_packages/
+.env
