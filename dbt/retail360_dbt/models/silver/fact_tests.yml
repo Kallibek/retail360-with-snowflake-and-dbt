@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: fact_orders
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: total_amount
+        tests:
+          - no_negative_amounts
+      - name: discount_amount
+        tests:
+          - no_negative_amounts
+      - name: shipping_cost
+        tests:
+          - no_negative_amounts
+
+  - name: fact_orderitems
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: ['order_id','product_id']
+    columns:
+      - name: quantity
+        tests:
+          - no_negative_amounts
+      - name: unit_price
+        tests:
+          - no_negative_amounts
+      - name: line_total
+        tests:
+          - no_negative_amounts
+      - name: line_discount
+        tests:
+          - no_negative_amounts

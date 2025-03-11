@@ -10,3 +10,4 @@ dbt/retail360_dbt/target
 **/__pycache__/
 airflow/logs
 terraform/terraform.tfstate.*.backup
+dbt/retail360_dbt/dbt_packages

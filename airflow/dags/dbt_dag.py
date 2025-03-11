@@ -23,6 +23,11 @@ with DAG(
 
     DBT_PROJECT_DIR = '/opt/dbt/retail360_dbt'  # adapt to your actual path
 
+    task_dbt_deps = BashOperator(
+        task_id='dbt_deps',
+        bash_command=f"cd {DBT_PROJECT_DIR} && dbt deps --profiles-dir ."
+    )
+
     task_dbt_run = BashOperator(
         task_id='dbt_run',
         bash_command=f"cd {DBT_PROJECT_DIR} && dbt run --profiles-dir ."
@@ -39,4 +44,4 @@ with DAG(
         bash_command=f"cd {DBT_PROJECT_DIR} && dbt test --profiles-dir ."
     )
 
-    task_dbt_run >> task_dbt_snapshot >> task_dbt_test
+    task_dbt_deps >> task_dbt_run >> task_dbt_snapshot >> task_dbt_test
