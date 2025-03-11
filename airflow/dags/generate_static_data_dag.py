@@ -43,49 +43,6 @@ def generate_and_upload_static_data(**context):
     s3_hook.load_string(csv_stores, key="stores/latest.csv", bucket_name=bucket_name, replace=True)
     logging.info("Static data upload complete.")
 
-def create_orders_and_orderitems_tables(**kwargs):
-    """
-    Create orders and orderitems tables in Snowflake manually.
-    Adjust the schema (here: STAGING) or data types as needed.
-    """
-    from utils.snowflake_util import run_snowflake_query
-
-    create_orders_table_query = """
-    CREATE TABLE IF NOT EXISTS STAGING.ORDERS (
-        order_id STRING,
-        customer_id STRING,
-        store_id STRING,
-        order_status STRING,
-        total_amount NUMBER(6,2),
-        discount_amount NUMBER(6,2),
-        shipping_cost NUMBER(6,2),
-        payment_type STRING,
-        created_at TIMESTAMP_NTZ,
-        ingestion_ts TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP
-    );
-    """
-
-    create_orderitems_table_query = """
-    CREATE TABLE IF NOT EXISTS STAGING.ORDERITEMS (
-        order_id STRING,
-        product_id STRING,
-        quantity NUMBER(6,0),
-        unit_price NUMBER(6,2),
-        line_total NUMBER(6,2),
-        line_discount NUMBER(6,2),
-        created_at TIMESTAMP_NTZ,
-        ingestion_ts TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP
-    );
-    """
-
-    logging.info("Creating ORDERS table in STAGING schema...")
-    run_snowflake_query(create_orders_table_query)
-    logging.info("ORDERS table created (if not exists).")
-
-    logging.info("Creating ORDERITEMS table in STAGING schema...")
-    run_snowflake_query(create_orderitems_table_query)
-    logging.info("ORDERITEMS table created (if not exists).")
-
 with DAG(
     dag_id='generate_static_data',
     default_args=default_args,
@@ -98,10 +55,3 @@ with DAG(
         task_id='generate_and_upload_static_data',
         python_callable=generate_and_upload_static_data,
     )
-
-    create_tables_task = PythonOperator(
-        task_id='create_orders_and_orderitems_tables',
-        python_callable=create_orders_and_orderitems_tables,
-    )
-
-    static_data_task >> create_tables_task
