@@ -4,9 +4,51 @@ import names
 import pandas as pd
 from faker import Faker
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
 faker = Faker()
+
+def random_timestamp_last_30_days():
+    """Generate a random UTC timestamp within the last 30 days with bias:
+       - Weekends (Saturday, Sunday) are twice as likely.
+       - Certain hours of the day (e.g. around midday) are more likely.
+    """
+    now = datetime.utcnow()
+
+    # Build a list of candidate dates from today back 29 days.
+    candidate_days = []
+    day_weights = []
+    for i in range(30):
+        day = now - timedelta(days=i)
+        # Use only the date portion.
+        candidate_days.append(day.date())
+        # Weight: weekends get a weight of 2, weekdays 1.
+        day_weights.append(2 if day.weekday() >= 5 else 1)
+
+    # Choose a day with weighted probability.
+    chosen_day = random.choices(candidate_days, weights=day_weights, k=1)[0]
+
+    # Define hourly weights for the 24 hours. This example gives higher chance
+    # to orders during mid-day. You can adjust the values as needed.
+    hour_weights = [
+        0.5, 0.5, 0.5, 0.5,   # 00-03: low probability
+        0.8, 1.0, 1.2, 1.5,   # 04-07: early morning, still low
+        2.0, 2.5, 3.0, 3.5,   # 08-11: increasing chance towards morning
+        4.0, 4.0, 4.0, 3.5,   # 12-15: peak period around noon/early afternoon
+        3.0, 2.5, 2.0, 1.5,   # 16-19: tapering off in the evening
+        1.0, 0.8, 0.5, 0.5    # 20-23: low probability at night
+    ]
+    chosen_hour = random.choices(list(range(24)), weights=hour_weights, k=1)[0]
+
+    # Minutes and seconds chosen uniformly.
+    chosen_minute = random.randint(0, 59)
+    chosen_second = random.randint(0, 59)
+
+    # Combine the chosen day and time components.
+    random_dt = datetime.combine(chosen_day, datetime.min.time()) + timedelta(
+        hours=chosen_hour, minutes=chosen_minute, seconds=chosen_second
+    )
+    return random_dt
 
 def generate_customers(num_customers=1000):
     # Example dimension with basic columns
@@ -83,6 +125,9 @@ def generate_orders_and_orderitems(df_customers, df_products, df_stores, num_ord
     data_orders = []
     data_items = []
     for _ in range(num_orders):
+        # Generate one random timestamp per order.
+        timestamp = random_timestamp_last_30_days().isoformat()
+
         order_id = str(uuid.uuid4())
         customer_row = df_customers.sample(1).iloc[0]
         store_row = df_stores.sample(1).iloc[0]
@@ -99,7 +144,7 @@ def generate_orders_and_orderitems(df_customers, df_products, df_stores, num_ord
             "discount_amount": discount_amount,
             "shipping_cost": shipping_cost,
             "payment_type": random.choice(["Credit Card", "PayPal", "Gift Card"]),
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": timestamp
             
         }
         data_orders.append(order_record)
@@ -121,7 +166,7 @@ def generate_orders_and_orderitems(df_customers, df_products, df_stores, num_ord
                 "unit_price": product_row["price"],
                 "line_total": line_total,
                 "line_discount": round(random.uniform(0, 5), 2),
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": timestamp
             }
             total_amount += line_total
             data_items.append(item_record)
