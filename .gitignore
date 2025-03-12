@@ -5,7 +5,6 @@ terraform/terraform.tfstate.backup
 *.txt
 !requirements.txt
 *.ps1
-terraform/variables.tf
 dbt/retail360_dbt/logs
 dbt/retail360_dbt/target
 **/__pycache__/
